@@ -1,9 +1,9 @@
 {
-  "version": "0.2.0",
+  "version": "0.3.0",
   "date": "2026-10-15",
   "license": "MIT",
-  "unit_tests": 24,
-  "unit_tests_passed": 24,
+  "unit_tests": 50,
+  "unit_tests_passed": 50,
   "runtime": {
     "os": "Windows",
     "nexus": "2.16",
@@ -21,18 +21,67 @@
     "standalone Python portability",
     "copy dry run and SHA256/source verification",
     "reject non-ASCII copied relative names, overlapping or existing destinations",
-    "detect source content changed during copy"
+    "detect source content changed during copy",
+    "model identity ambiguity/conflict refusal",
+    "same MODEL with distinct marker layouts",
+    "local self-describing custom models",
+    "existing colors/links and non-display bytes preserved",
+    "missing endpoint skipped without new markers",
+    "source changes after plan refused",
+    "UTF-8 marker label round trip",
+    "VST target and implicit encoding conversion refused",
+    "Nexus static-only marker membership included",
+    "no live import or trajectory writes by link tool"
   ],
   "public_version_full_live_gap_fill_this_release": false,
   "prior_live_evidence": "Earlier modular implementation completed one independent Nexus trial and export check; not a new live run of this public release.",
   "real_data_in_package": false,
   "vendor_binaries_in_package": false,
-  "live_readonly_preflight_this_release": true,
+  "live_readonly_preflight_this_release": false,
   "skill_format_validator": "passed",
   "publication_checks": {
     "ascii_package_member_names": true,
     "no_personal_paths_or_raw_data": true,
     "local_document_links_exist": true,
     "ui_metadata_valid": true
-  }
+  },
+  "previous_gap_fill_tests": 24,
+  "model_display_tests": 26,
+  "gap_fill_script_byte_identical_to_0_2_0": true,
+  "live_readonly_model_identification_this_release": true,
+  "model_display_validation": {
+    "version": "0.3.0",
+    "local_vst_definitions": 88,
+    "scan_errors": 0,
+    "available_registry_profiles": [
+      "cgm1-kad-medial",
+      "cgm1-medial",
+      "cgm2.1",
+      "cgm2.2",
+      "cgm2.3",
+      "cgm2.4",
+      "cgm2.5",
+      "hybrid-cast-visual3d",
+      "oxford-foot",
+      "plug-in-gait"
+    ],
+    "missing_registry_profiles": [
+      "cgm1.0",
+      "cgm1.1",
+      "cgm2.6"
+    ],
+    "live_readonly_declared_model": [
+      "cgm2.3"
+    ],
+    "live_readonly_display_status": "already_complete",
+    "private_file_round_trip": {
+      "status": "vsk_copy_verified",
+      "removed_display_edges": 3,
+      "restored_display_edges": 3,
+      "non_display_structure_unchanged": true,
+      "source_unchanged": true,
+      "applied_in_nexus": false
+    }
+  },
+  "live_gui_import_vsk_verified": false
 }

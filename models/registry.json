@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "version": "0.3.0",
+  "reviewed": "2026-10-15",
+  "scope": "Model identity hints only. Display edges are read locally from VST/VSK, never inferred from these names.",
+  "sources": {
+    "vicon_templates": "https://www.vicon.com/wp-content/uploads/2022/08/Vicon-Nexus-guide-1_native-skeleton-templates.pdf",
+    "vicon_models": "https://www.vicon.com/software/models-and-scripts/",
+    "vicon_ofm": "https://www.vicon.com/software/oxford-foot-model/",
+    "pycgm2": "https://github.com/pyCGM2/pyCGM2",
+    "pycgm2_models": "https://pycgm2.netlify.app/"
+  },
+  "profiles": [
+    {"id": "plug-in-gait", "name": "Plug-in Gait", "family": "Conventional Gait", "patterns": ["plug[ _-]*in[ _-]*gait"], "sources": ["vicon_templates", "vicon_models"], "note": "Full/lower/functional and SACR/PSIS layouts require the matching local definition."},
+    {"id": "cgm1.0", "name": "CGM 1.0", "family": "CGM", "patterns": ["(?:^|[^a-z0-9])cgm[ _-]*1[._ -]0(?:$|[^0-9])", "(?:^|[^a-z0-9])cgm10(?:$|[^0-9])"], "sources": ["pycgm2"], "note": "Do not infer 1.0 versus 1.1 from a common marker layout."},
+    {"id": "cgm1.1", "name": "CGM 1.1", "family": "CGM", "patterns": ["(?:^|[^a-z0-9])cgm[ _-]*1[._ -]1(?:$|[^0-9])", "(?:^|[^a-z0-9])cgm11(?:$|[^0-9])"], "sources": ["pycgm2"], "note": "Requires explicit model metadata; shared markers are not version evidence."},
+    {"id": "cgm1-medial", "name": "pyCGM2 CGM1 medial template", "family": "CGM", "patterns": ["cgm1[ _-]+medial(?:$|[^a-z])"], "sources": ["pycgm2"], "note": "Template identity; does not resolve the calculation version as CGM1.0 or 1.1."},
+    {"id": "cgm1-kad-medial", "name": "pyCGM2 CGM1 KADmed template", "family": "CGM", "patterns": ["cgm1[ _-]+kadmed(?:$|[^a-z])"], "sources": ["pycgm2"], "note": "KAD/medial template identity, not proof of a completed calibration."},
+    {"id": "cgm2.1", "name": "CGM 2.1", "family": "CGM", "patterns": ["cgm[ _-]*2[._ -]?1(?:$|[^0-9])"], "sources": ["pycgm2", "vicon_templates"]},
+    {"id": "cgm2.2", "name": "CGM 2.2", "family": "CGM", "patterns": ["cgm[ _-]*2[._ -]?2(?:$|[^0-9])"], "sources": ["pycgm2", "vicon_templates"]},
+    {"id": "cgm2.3", "name": "CGM 2.3", "family": "CGM", "patterns": ["cgm[ _-]*2[._ -]?3(?:$|[^0-9])"], "sources": ["pycgm2", "vicon_templates"]},
+    {"id": "cgm2.4", "name": "CGM 2.4", "family": "CGM", "patterns": ["cgm[ _-]*2[._ -]?4(?:$|[^0-9])"], "sources": ["pycgm2", "vicon_templates"]},
+    {"id": "cgm2.5", "name": "CGM 2.5", "family": "CGM", "patterns": ["cgm[ _-]*2[._ -]?5(?:$|[^0-9])"], "sources": ["pycgm2", "vicon_templates"]},
+    {"id": "cgm2.6", "name": "CGM 2.6", "family": "CGM", "patterns": ["cgm[ _-]*2[._ -]?6(?:$|[^0-9])"], "sources": ["pycgm2", "pycgm2_models"], "note": "Recognized when explicit; a matching local display definition is still required."},
+    {"id": "oxford-foot", "name": "Oxford Foot Model", "family": "Multi-segment foot", "patterns": ["oxford[ _-]*foot", "^ofm(?:$|[ _-])"], "sources": ["vicon_ofm", "vicon_templates"], "note": "Left, right and bilateral templates share MODEL metadata; exact marker definitions disambiguate."},
+    {"id": "hybrid-cast-visual3d", "name": "Hybrid CAST / Visual3D template", "family": "CAST", "patterns": ["hybrid[ _-]*cast", "cast[ _-]*visual3d"], "sources": ["vicon_templates"], "note": "This is the Nexus template family, not every Visual3D or CAST model."}
+  ]
+}

@@ -1,14 +1,27 @@
 ---
 name: nexus-gap-fill
-description: "在 Windows Vicon Nexus 中对已标记、已有标定 VSK 的动捕轨迹补点，兼容不同标记布局。先检查全英文 ASCII 路径并准备副本，再运行 Nexus 原生流程；剩余缺口调用备用算法并逐帧标注 LOW。用于单条/批量补点、Python 接入和补点故障排查。"
+description: "在 Windows Vicon Nexus 中为已有标定 VSK 的试验补点，识别模型/贴点模板并生成三维显示连线副本。支持 Plug-in Gait、CGM、Oxford Foot、Hybrid CAST/Visual3D 及本机自定义 VST/VSK。先检查全英文 ASCII 路径，再原生优先补点并逐帧标注 LOW。用于单条/批量补点、模型识别、显示连线和 Python 接入；不计算关节角。"
 license: MIT
 metadata:
-  version: "0.2.0"
+  version: "0.3.0"
 ---
 
 # Nexus Gap Fill
 
 面向 Windows、Nexus 2.16、已正确标记且已有标定 VSK 的试验。每条只启用一个受试者，单位为 mm。按 VSK 标记—体段关系适配不同点名，不代表任意布局的准确性均已验证。这是社区实现，不是 Vicon 官方发布；代码和说明采用 [MIT](LICENSE)，依赖项不随包分发。
+
+## 模型识别与显示连线
+
+执行补点前，先用 [scripts/NexusModelLinks.py](scripts/NexusModelLinks.py) 读取已保存 VSK、本机模板与 Nexus 模板信息。离线默认只读；在 Nexus Python 页空参数运行时生成独立的连线 VSK 副本，不改变当前试验。完整命令、导入方式、支持范围见 [references/models-and-links.md](references/models-and-links.md)，机器可读注册表为 [models/registry.json](models/registry.json)。只使用原单文件补点代码时，这个可选工具不成为其依赖。
+
+- 注册表覆盖 Plug-in Gait、CGM1/CGM2、Oxford Foot、Hybrid CAST/Visual3D 模板家族；发现本机 VST，并允许用户指定其他 VST/VSK。注册表列名不等于已安装模板、动态计算模型已验证或所有公开模型均覆盖。每次报告本机实际找到/缺少的定义。
+- 优先使用 VSK 的 `MODEL` 元数据，交叉检查 Nexus template。XML `VERSION="3.2"` 是文件格式标记，不能当作 CGM2.3。识别到模板身份不能证明先前使用的动态运算 Pipeline。同点名不能分辨所有 CGM 计算版本，标定状态仍需单独确认。
+- 自动选连线模板须 `MODEL` 和完整物理标记集合一致；多份定义的连线/颜色有冲突就停止自动选择。未知模型可用相同自描述模板；没有定义则列候选，不用最近距离或名称相似度猜人体连线。用户明确选定模板时只使用同名端点，不自动重命名、补建点或用左右镜像替代。
+- 只在新副本中补加缺少的 `MarkerSet/Sticks`，保留已有连线和颜色，验证其余字节、骨架、参数、目标/约束不变，核对原文件哈希。**显示线不能当作体段、关节或刚体约束输入补点。** 不用其他模板的 Skeleton/TargetSet 覆盖已标定 VSK。
+- 连线工具依赖磁盘已保存状态；先保存副本的受试者编辑再生成，生成后又编辑则重新生成。工具检测到加载标记与磁盘 VSK 不一致时停止，但不能检测所有未保存参数。
+- SDK 没有设置显示 sticks 的接口。生成后在 Nexus 的 **File Import → Import VSK** 选生成的同名 VSK（位于新目录），核对是原受试者及三维连线；不替换为未标定 VST，不创建新骨架。本版采用“自动生成，软件导入一次”的方式。不得在 Nexus 脚本中嵌套调用运行/重载，或声称 `vsk_copy_verified` 表示已在软件显示。
+
+模板来自本机或用户合法取得的文件，运行时读取；共享包不附带厂家 VST/VSK。公开可下载不自动等于允许再分发。不要自动下载、上传或扫描其他受试者 VSK。
 
 ## 路径是执行前提
 
@@ -23,7 +36,7 @@ metadata:
 
 ## 准备与执行
 
-1. 确认目标试验、ROI、已标定 VSK 和一个启用受试者。采集过静态或跑过 CGM/PiG 静态计算，不能单独证明 labeling VSK 已标定。按事件截取时先确认事件和帧号；脚本不自动识别标定架亮灯。
+1. 确认目标试验、ROI、已标定 VSK 和一个启用受试者，并按上节读取模型身份。采集过静态或跑过 CGM/PiG 静态计算，不能单独证明 labeling VSK 已标定。按事件截取时先确认事件和帧号；脚本不自动识别标定架亮灯。
 2. 保留原始数据，确认已有独立副本，或用 [scripts/stage_session.py](scripts/stage_session.py) 创建英文副本并核对哈希；默认只给计划，`--copy` 才复制。源父目录可含中文，复制后的相对目录/文件名不可含非 ASCII。工具不重写文件内部路径引用，复制后复核外部引用。命令和界面操作见 [references/nexus-workflow.md](references/nexus-workflow.md)。
 3. 沿用当前会话已确认的低可靠策略。对其他用户，若尚未决定是否允许 LOW 写回，先澄清，或将脚本 CONFIG 的 `allow_low_reliability_completion` 设为 False，保留原生未补缺口；不能把原作者对特定数据的授权视为共享用户的授权。
 4. 使用当前 Nexus 匹配的 Python，检查 NumPy、viconnexusapi、pyCGM2 的 BTK。先读取现场状态；切换试验前确认当前编辑已保存，不推断“无未保存修改”。

@@ -1,4 +1,4 @@
 interface:
-  display_name: "Nexus 自动补点"
-  short_description: "检查全英文路径，优先运行 Nexus 原生补点并逐帧标注备用估算"
-  default_prompt: "使用 $nexus-gap-fill 检查全英文路径，在试验副本上按原生优先流程补点，并输出逐帧可靠性记录。"
+  display_name: "Nexus 补点与模型连线"
+  short_description: "检查英文路径与模型身份，生成显示连线副本，原生优先补点并逐帧标注估算"
+  default_prompt: "使用 $nexus-gap-fill 检查英文路径和模型身份，在副本上生成显示连线并按原生优先流程补点，输出逐帧可靠性记录。"
