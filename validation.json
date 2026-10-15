@@ -1,0 +1,38 @@
+{
+  "version": "0.2.0",
+  "date": "2026-10-15",
+  "license": "MIT",
+  "unit_tests": 24,
+  "unit_tests_passed": 24,
+  "runtime": {
+    "os": "Windows",
+    "nexus": "2.16",
+    "python": "3.7.3",
+    "numpy": "1.18.5"
+  },
+  "algorithm_functions_unchanged_from_prior_version": 11,
+  "checks": [
+    "native/input freezing",
+    "ROI and original frame mapping",
+    "BTK write/read and corrupted export rejection",
+    "ASCII parents, trial names, VSK names, cache and private Pipeline config",
+    "ASCII alias resolving to non-ASCII rejection",
+    "default prepare does not edit trajectories",
+    "standalone Python portability",
+    "copy dry run and SHA256/source verification",
+    "reject non-ASCII copied relative names, overlapping or existing destinations",
+    "detect source content changed during copy"
+  ],
+  "public_version_full_live_gap_fill_this_release": false,
+  "prior_live_evidence": "Earlier modular implementation completed one independent Nexus trial and export check; not a new live run of this public release.",
+  "real_data_in_package": false,
+  "vendor_binaries_in_package": false,
+  "live_readonly_preflight_this_release": true,
+  "skill_format_validator": "passed",
+  "publication_checks": {
+    "ascii_package_member_names": true,
+    "no_personal_paths_or_raw_data": true,
+    "local_document_links_exist": true,
+    "ui_metadata_valid": true
+  }
+}

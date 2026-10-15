@@ -1,0 +1,4 @@
+interface:
+  display_name: "Nexus 自动补点"
+  short_description: "检查全英文路径，优先运行 Nexus 原生补点并逐帧标注备用估算"
+  default_prompt: "使用 $nexus-gap-fill 检查全英文路径，在试验副本上按原生优先流程补点，并输出逐帧可靠性记录。"
