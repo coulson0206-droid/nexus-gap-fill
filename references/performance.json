@@ -1,0 +1,30 @@
+{
+  "version": "0.4.0",
+  "date": "2026-10-16",
+  "staging_plan_readonly": {
+    "full_files": 91,
+    "selected_files": 14,
+    "full_bytes": 384146566,
+    "selected_bytes": 49937538,
+    "bytes_reduction_percent": 87.0,
+    "actual_copy_timing_measured": false
+  },
+  "synthetic_write_benchmark": {
+    "frames": 2009,
+    "markers": 47,
+    "modified_markers": 1,
+    "sdk_write_requests": {
+      "legacy_all": 47,
+      "changed_only": 1,
+      "no_change": 0
+    },
+    "python_preparation_seconds": {
+      "legacy_all": 0.006376490000000001,
+      "changed_only": 0.003912539999999997,
+      "no_change": 0.0037860899999999976
+    },
+    "real_sdk_latency_included": false,
+    "full_nexus_pipeline_speed_measured": false
+  },
+  "core_algorithm_functions_ast_unchanged": 11
+}

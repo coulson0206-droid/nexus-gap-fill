@@ -1,55 +1,25 @@
 {
-  "version": "0.3.0",
-  "date": "2026-10-15",
+  "version": "0.4.0",
+  "date": "2026-10-16",
   "license": "MIT",
-  "unit_tests": 50,
-  "unit_tests_passed": 50,
+  "unit_tests": 64,
+  "unit_tests_passed": 64,
+  "previous_gap_fill_tests": 24,
+  "model_display_tests": 26,
+  "workflow_tests": 14,
   "runtime": {
     "os": "Windows",
     "nexus": "2.16",
     "python": "3.7.3",
     "numpy": "1.18.5"
   },
-  "algorithm_functions_unchanged_from_prior_version": 11,
-  "checks": [
-    "native/input freezing",
-    "ROI and original frame mapping",
-    "BTK write/read and corrupted export rejection",
-    "ASCII parents, trial names, VSK names, cache and private Pipeline config",
-    "ASCII alias resolving to non-ASCII rejection",
-    "default prepare does not edit trajectories",
-    "standalone Python portability",
-    "copy dry run and SHA256/source verification",
-    "reject non-ASCII copied relative names, overlapping or existing destinations",
-    "detect source content changed during copy",
-    "model identity ambiguity/conflict refusal",
-    "same MODEL with distinct marker layouts",
-    "local self-describing custom models",
-    "existing colors/links and non-display bytes preserved",
-    "missing endpoint skipped without new markers",
-    "source changes after plan refused",
-    "UTF-8 marker label round trip",
-    "VST target and implicit encoding conversion refused",
-    "Nexus static-only marker membership included",
-    "no live import or trajectory writes by link tool"
-  ],
+  "algorithm_functions_ast_unchanged_from_0_3_0": 11,
   "public_version_full_live_gap_fill_this_release": false,
+  "live_full_batch_verified": false,
+  "real_nexus_runtime_speedup_measured": false,
+  "live_gui_import_vsk_verified": false,
   "prior_live_evidence": "Earlier modular implementation completed one independent Nexus trial and export check; not a new live run of this public release.",
-  "real_data_in_package": false,
-  "vendor_binaries_in_package": false,
-  "live_readonly_preflight_this_release": false,
-  "skill_format_validator": "passed",
-  "publication_checks": {
-    "ascii_package_member_names": true,
-    "no_personal_paths_or_raw_data": true,
-    "local_document_links_exist": true,
-    "ui_metadata_valid": true
-  },
-  "previous_gap_fill_tests": 24,
-  "model_display_tests": 26,
-  "gap_fill_script_byte_identical_to_0_2_0": true,
-  "live_readonly_model_identification_this_release": true,
-  "model_display_validation": {
+  "historical_model_display_evidence": {
     "version": "0.3.0",
     "local_vst_definitions": 88,
     "scan_errors": 0,
@@ -83,5 +53,84 @@
       "applied_in_nexus": false
     }
   },
-  "live_gui_import_vsk_verified": false
+  "simulated_queue": {
+    "trials": 2,
+    "native_vicon_operations": "simulated",
+    "btk_serialization": "real",
+    "source_files_unchanged": true,
+    "no_host_python_operations": true,
+    "timeout_does_not_retry": true,
+    "no_auto_save": true,
+    "verified_export_precedes_close": true
+  },
+  "performance": {
+    "version": "0.4.0",
+    "date": "2026-10-16",
+    "staging_plan_readonly": {
+      "full_files": 91,
+      "selected_files": 14,
+      "full_bytes": 384146566,
+      "selected_bytes": 49937538,
+      "bytes_reduction_percent": 87.0,
+      "actual_copy_timing_measured": false
+    },
+    "synthetic_write_benchmark": {
+      "frames": 2009,
+      "markers": 47,
+      "modified_markers": 1,
+      "sdk_write_requests": {
+        "legacy_all": 47,
+        "changed_only": 1,
+        "no_change": 0
+      },
+      "python_preparation_seconds": {
+        "legacy_all": 0.006376490000000001,
+        "changed_only": 0.003912539999999997,
+        "no_change": 0.0037860899999999976
+      },
+      "real_sdk_latency_included": false,
+      "full_nexus_pipeline_speed_measured": false
+    },
+    "core_algorithm_functions_ast_unchanged": 11
+  },
+  "checks": [
+    "native/input freezing",
+    "ROI and original frame mapping",
+    "BTK write/read and corrupted export rejection",
+    "ASCII parents, trial names, VSK names, cache and private Pipeline config",
+    "ASCII alias resolving to non-ASCII rejection",
+    "default prepare does not edit trajectories",
+    "standalone Python portability",
+    "copy dry run and SHA256/source verification",
+    "reject non-ASCII copied relative names, overlapping or existing destinations",
+    "detect source content changed during copy",
+    "model identity ambiguity/conflict refusal",
+    "same MODEL with distinct marker layouts",
+    "local self-describing custom models",
+    "existing colors/links and non-display bytes preserved",
+    "missing endpoint skipped without new markers",
+    "source changes after plan refused",
+    "UTF-8 marker label round trip",
+    "VST target and implicit encoding conversion refused",
+    "Nexus static-only marker membership included",
+    "no live import or trajectory writes by link tool",
+    "selected-trial copy excludes unrelated data and previous exports",
+    "changed-only trajectory writes preserve native/input/outside-ROI values",
+    "provenance CSV generated once and both copies byte-identical",
+    "single-process two-trial queue with real BTK output verification",
+    "input and calibrated VSK changes stop queue",
+    "uncertain operation remains for review; no retry or next open",
+    "exclusive queue lock survives uncertainty",
+    "completed exports hash-checked and skipped without SDK work",
+    "initial wrong trial rejected without ROI change or queue lock"
+  ],
+  "real_data_in_package": false,
+  "vendor_binaries_in_package": false,
+  "skill_format_validator": "passed",
+  "publication_checks": {
+    "ascii_package_member_names": true,
+    "no_personal_paths_or_raw_data": true,
+    "local_document_links_exist": true,
+    "ui_metadata_valid": true
+  }
 }

@@ -40,7 +40,43 @@ def inventory(source):
     return sorted(files), sorted(directories, key=lambda p: (len(p.parts), str(p)))
 
 
-def stage(source, destination, execute=False):
+def selected_inventory(source, trials):
+    """Only selected trial bundles and shared model files; no unrelated trials."""
+    if len(set(trials)) != len(trials) or not trials:
+        raise RuntimeError("Specify distinct trial basenames")
+    for trial in trials:
+        if not _ascii_text(trial) or Path(trial).name != trial or any(c in trial for c in '/\\:'):
+            raise RuntimeError("Invalid ASCII trial basename")
+    files = []
+    shared = {".vsk", ".vst", ".mp", ".model", ".pycgm2", ".mkr"}
+    suffixes = (".c3d", ".trial.enf", ".x2d", ".x1d", ".xcp", ".system",
+                ".history", ".digitaldevices.xml")
+    for item in source.iterdir():
+        lower = item.name.lower()
+        chosen = (item.suffix.lower() in shared or lower.endswith(".session.enf") or
+                  (lower.endswith(".xml") and not lower.endswith(".digitaldevices.xml")))
+        chosen = chosen or any(lower == (trial + suffix).lower()
+                               for trial in trials for suffix in suffixes)
+        chosen = chosen or (item.suffix.lower() in (".avi", ".mp4") and
+                            any(item.name.startswith(trial + ".") for trial in trials))
+        if not chosen:
+            continue
+        if not item.is_file() or item.is_symlink() or item.resolve() != item.absolute():
+            raise RuntimeError("Selected session dependency is not a regular unlinked file")
+        if not _ascii_text(item.name):
+            raise RuntimeError("ASCII_RELATIVE_NAME_REQUIRED: " + item.name.encode("unicode_escape").decode("ascii"))
+        files.append(Path(item.name))
+    names = {p.name.lower() for p in files}
+    for trial in trials:
+        if (trial + ".Trial.enf").lower() not in names or not any(
+                (trial + suffix).lower() in names for suffix in (".c3d", ".x2d")):
+            raise RuntimeError("Selected trial needs its ENF and C3D or raw X2D: " + trial)
+    if not any(p.suffix.lower() == ".vsk" for p in files):
+        raise RuntimeError("Selected session needs a calibrated VSK")
+    return sorted(files), []
+
+
+def stage(source, destination, execute=False, trials=None):
     ascii_path_guard({"staging helper": Path(__file__), "destination": destination})
     source, destination = Path(source).resolve(), Path(destination).resolve()
     if not source.is_dir():
@@ -49,13 +85,16 @@ def stage(source, destination, execute=False):
         raise RuntimeError("SOURCE_DESTINATION_OVERLAP: choose an independent directory.")
     if destination.exists():
         raise RuntimeError("DESTINATION_EXISTS: use a new destination; nothing is merged or overwritten.")
-    files, directories = inventory(source)
-    if not {".c3d", ".enf", ".vsk"}.issubset({p.suffix.lower() for p in files}):
+    scan = (lambda: selected_inventory(source, trials)) if trials is not None else (lambda: inventory(source))
+    files, directories = scan()
+    if trials is None and not {".c3d", ".enf", ".vsk"}.issubset({p.suffix.lower() for p in files}):
         raise RuntimeError("The saved session must include C3D, ENF and calibrated VSK files.")
-    if Path("ngf-copy-manifest.json") in files:
+    if (source / "ngf-copy-manifest.json").exists():
         raise RuntimeError("The source already contains an NGF staging manifest; choose the saved source session.")
     report = dict(status="plan", source=str(source), destination=str(destination), files=len(files),
-                  bytes=sum((source / name).stat().st_size for name in files), references_not_rewritten=True)
+                  bytes=sum((source / name).stat().st_size for name in files), references_not_rewritten=True,
+                  selection="selected_trials" if trials is not None else "complete_session",
+                  trials=trials)
     if not execute:
         return report
     hashes = {str(name): sha256(source / name) for name in files}
@@ -67,7 +106,7 @@ def stage(source, destination, execute=False):
             shutil.copy2(str(source / name), str(destination / name))
             if sha256(destination / name) != hashes[str(name)]:
                 raise RuntimeError("Copied file hash mismatch: " + str(name))
-        after_files, after_directories = inventory(source)
+        after_files, after_directories = scan()
         if after_files != files or after_directories != directories:
             raise RuntimeError("Source directory changed during copying; this destination is not ready.")
         if any(sha256(source / name) != hashes[str(name)] for name in files):
@@ -86,8 +125,9 @@ def main():
     parser.add_argument("--source", required=True)
     parser.add_argument("--destination", required=True)
     parser.add_argument("--copy", action="store_true")
+    parser.add_argument("--trial", action="append", help="Repeat for selected trial basenames; omit to copy the full session")
     args = parser.parse_args()
-    print(json.dumps(stage(args.source, args.destination, args.copy), ensure_ascii=True, indent=2))
+    print(json.dumps(stage(args.source, args.destination, args.copy, args.trial), ensure_ascii=True, indent=2))
 
 
 if __name__ == "__main__":

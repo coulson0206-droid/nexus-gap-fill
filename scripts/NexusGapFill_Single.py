@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""NexusGapFill public single-file edition 0.2.0, Nexus 2.16 / Python 3.7.
+"""NexusGapFill public single-file edition 0.4.0, Nexus 2.16 / Python 3.7.
 
 使用方法：
 1. 将脚本和试验副本放在全英文 ASCII 路径；启用一个已标定 VSK 受试者，设置 ROI。
@@ -722,7 +722,7 @@ def begin(nexus, profile_path):
     methods[valid] = "input_existing"
     np.savez_compressed(str(run_path / "original.npz"), xyz=xyz, valid=valid)
     np.savez_compressed(str(run_path / "latest.npz"), xyz=xyz, valid=valid, methods=methods)
-    state = dict(version="0.2.0", run_id=run_id, status="native_processing", input=meta,
+    state = dict(version="0.4.0", run_id=run_id, status="native_processing", input=meta,
                  profile=str(profile_path), stages=[], warnings=[
                      "input_existing means present on entry; prior fills cannot automatically be distinguished from measurements",
                      "model uncertainty and smoothness are not calibrated accuracy guarantees"],
@@ -732,11 +732,20 @@ def begin(nexus, profile_path):
     print("NGF begin:", run_path)
 
 
-def _write(nexus, meta, xyz, valid):
+def _write(nexus, meta, xyz, valid, before_xyz=None, before_valid=None):
+    """Write changed columns only; compare invalid/out-of-ROI samples too."""
+    written = []
     for index, name in enumerate(meta["description"]["target_markers"]):
         values = xyz[:, index]
+        if before_xyz is not None and before_valid is not None:
+            same_xyz = (values == before_xyz[:, index]) | (
+                np.isnan(values) & np.isnan(before_xyz[:, index]))
+            if same_xyz.all() and np.array_equal(valid[:, index], before_valid[:, index]):
+                continue
         nexus.SetTrajectory(meta["subject"], name, values[:, 0].tolist(), values[:, 1].tolist(),
                             values[:, 2].tolist(), valid[:, index].tolist())
+        written.append(name)
+    return written
 
 
 def checkpoint(nexus, profile_path, stage):
@@ -744,13 +753,15 @@ def checkpoint(nexus, profile_path, stage):
     profile, meta, xyz, valid, run_path, state, original, original_valid, previous, previous_valid, methods = loaded
     if state["status"] != "native_processing":
         raise RuntimeError("Checkpoint called outside the native processing phase.")
+    started = time.perf_counter()
+    before_xyz, before_valid = xyz.copy(), valid.copy()
     roi = roi_mask(len(xyz), meta["array_frame_origin"], meta["roi"])
     added = valid & ~previous_valid & roi[:, None]
     xyz[previous_valid] = previous[previous_valid]
     valid[previous_valid] = True
     xyz[~roi], valid[~roi] = original[~roi], original_valid[~roi]
     methods[added] = stage
-    _write(nexus, meta, xyz, valid)
+    written = _write(nexus, meta, xyz, valid, before_xyz, before_valid)
     # Native operations must not create optional/static-only marker trajectories.
     for name in meta["excluded"]:
         if nexus.HasTrajectory(meta["subject"], name):
@@ -758,7 +769,8 @@ def checkpoint(nexus, profile_path, stage):
             if any(e):
                 nexus.SetTrajectory(meta["subject"], name, x, y, z, [False]*len(e))
     np.savez_compressed(str(run_path / "latest.npz"), xyz=xyz, valid=valid, methods=methods)
-    state["stages"].append(dict(stage=stage, added=int(added.sum())))
+    state["stages"].append(dict(stage=stage, added=int(added.sum()),
+        trajectory_writes=len(written), checkpoint_seconds=time.perf_counter()-started))
     write_json(run_path / "run.json", state)
     print("NGF", stage, "filled", int(added.sum()))
 
@@ -798,7 +810,7 @@ def finish(nexus, profile_path):
     result = complete_remaining(original, original_valid, previous, previous_valid,
         meta["description"]["target_markers"], meta["description"]["segments"], roi,
         profile["settings"], native_methods=methods)
-    _write(nexus, meta, result["xyz"], result["valid"])
+    written = _write(nexus, meta, result["xyz"], result["valid"], xyz, valid)
     # Exact SDK readback check before export. No model is fitted or recalibrated here.
     readback_error = 0.0
     for j, marker in enumerate(meta["description"]["target_markers"]):
@@ -820,8 +832,10 @@ def finish(nexus, profile_path):
                 invalidated.append(name)
     np.savez_compressed(str(run_path / "completed.npz"), **{
         k: result[k] for k in ("xyz", "valid", "methods", "low", "model_sd")})
-    _csv_report(run_path / "per_frame_provenance.csv", meta, result)
-    _csv_report(Path(meta["trial_folder"]) / (meta["trial"] + "_NGF.provenance.csv"), meta, result)
+    csv_path = run_path / "per_frame_provenance.csv"
+    _csv_report(csv_path, meta, result)
+    shutil.copyfile(str(csv_path), str(Path(meta["trial_folder"]) /
+                                     (meta["trial"] + "_NGF.provenance.csv")))
     state["status"] = "completed_in_memory_export_pending"
     state["warnings"].extend(result["warnings"])
     state["fallback_segments"] = result["details"]
@@ -831,6 +845,7 @@ def finish(nexus, profile_path):
         fallback_added=int(result["low"].sum()),
         remaining=int((~result["valid"] & roi[:, None]).sum()),
         sdk_readback_max_mm=readback_error,
+        fallback_trajectory_writes=len(written),
         invalidated_old_model_outputs=invalidated)
     write_json(run_path / "run.json", state)
     print("NGF finish:", json.dumps(state["summary"]))

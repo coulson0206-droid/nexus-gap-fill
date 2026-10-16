@@ -19,3 +19,6 @@ state/
 *.log
 *_NGF.provenance.csv
 *_NGF.summary.json
+*.queue.json
+*.state.json
+NGF_BATCH.lock

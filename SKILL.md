@@ -1,9 +1,9 @@
 ---
 name: nexus-gap-fill
-description: "在 Windows Vicon Nexus 中为已有标定 VSK 的试验补点，识别模型/贴点模板并生成三维显示连线副本。支持 Plug-in Gait、CGM、Oxford Foot、Hybrid CAST/Visual3D 及本机自定义 VST/VSK。先检查全英文 ASCII 路径，再原生优先补点并逐帧标注 LOW。用于单条/批量补点、模型识别、显示连线和 Python 接入；不计算关节角。"
+description: "在 Windows Vicon Nexus 中为已有标定 VSK 的试验补点，识别模型并生成显示连线副本。支持英文路径检查、原生优先补点和逐帧 LOW 标注；提供同会话已标记 C3D 的外部队列与单条软件入口。用于补点、连线和执行流程优化；外部队列尚未完整 Nexus 批量验收，不计算关节角。"
 license: MIT
 metadata:
-  version: "0.3.0"
+  version: "0.4.0"
 ---
 
 # Nexus Gap Fill
@@ -36,6 +36,14 @@ metadata:
 
 ## 准备与执行
 
+**先准备一次，再运行数据。** 同一会话/同一标定 VSK 的任务只做一次环境、模型/连线确认和副本准备。优先复用已核对的独立副本；新建时 `stage_session.py --trial "trial basename"` 可重复选择所需试验，避免为一条复制其他全部试验。完整会话复制仍可用。不要在每个试验重复模板扫描、整会话哈希、重注册相同配置或探索界面。
+
+多条已重建、正确标记且保存的 C3D，可用外部 [scripts/NexusBatch.py](scripts/NexusBatch.py) 在一个 Python 进程中运行同一套原生/备用阶段，逐条计时、记录 SDK 调用数和停止原因。先读 [references/efficient-workflow.md](references/efficient-workflow.md)。原生算法/补点上限不变，输入/已接受原生值/ROI 外保护与逐帧 LOW 明细保留；只写变化轨迹，CSV 生成一次后复制。
+
+外部队列只覆盖单会话、单启用受试者、同一已确认的标定 VSK；不同会话/标定分组。启动前一次人工确认当前编辑已保存、正确 VSK 已加载并核对、首条已打开、各条 ROI 和 LOW 策略明确。当前 SDK 不能凭点名验证加载的全部骨架参数；不能把确认标记当作自动验证。若保存后 VSK 参数不一致，停止并提示一次载入正确 VSK，不反复开关试验、不自动重标定、不自动保存/改写原始模型。
+
+外部入口必须从 Nexus 之外运行，不能在软件 Python 页载入；原单文件入口继续按下面步骤使用。队列只在上一条新导出已验证后关闭自己处理的试验并打开下一条；不调用 SaveTrial 覆盖输入。超时可能仍有后台操作，记录 `needs_attention` 并保留现场，不重发、不跳过到下一条。已验证条目可按输出哈希跳过，半条中断不能盲目恢复。
+
 1. 确认目标试验、ROI、已标定 VSK 和一个启用受试者，并按上节读取模型身份。采集过静态或跑过 CGM/PiG 静态计算，不能单独证明 labeling VSK 已标定。按事件截取时先确认事件和帧号；脚本不自动识别标定架亮灯。
 2. 保留原始数据，确认已有独立副本，或用 [scripts/stage_session.py](scripts/stage_session.py) 创建英文副本并核对哈希；默认只给计划，`--copy` 才复制。源父目录可含中文，复制后的相对目录/文件名不可含非 ASCII。工具不重写文件内部路径引用，复制后复核外部引用。命令和界面操作见 [references/nexus-workflow.md](references/nexus-workflow.md)。
 3. 沿用当前会话已确认的低可靠策略。对其他用户，若尚未决定是否允许 LOW 写回，先澄清，或将脚本 CONFIG 的 `allow_low_reliability_completion` 设为 False，保留原生未补缺口；不能把原作者对特定数据的授权视为共享用户的授权。
@@ -46,7 +54,7 @@ metadata:
 
 SDK 禁止从 Nexus 正在执行的脚本嵌套调用 RunPipeline、OpenTrial、SaveTrial。必须用外层原生 Pipeline 顺序调度，不能承诺在 Run Script 内嵌套一键跑完整流程，也不通过后台进程绕过。
 
-多条试验可在 Data Management 标记后 Batch Processing；先验证一条副本。同布局也要核对刚体预检查、目标集合和 ROI，不满足时重新准备；不同布局分开生成。失败时停止该试验后续操作，报告已完成/未完成项。GUI 多条批处理尚未现场验收。
+Nexus 自带 Data Management → Batch Processing 仍可使用原软件 Pipeline 入口；先验证一条副本。外部队列不需要逐条选择/启动 GUI Pipeline，会按每条实际缺口重新检查刚体适用性。两种批量路径均未完成真实 Nexus 多条现场验收，不能用合成测试或请求数量下降承诺实际耗时。没有需要排查的异常时不反复截图或读取所有轨迹来报告进度，读队列状态文件即可。
 
 ## 保持算法与数据约束
 
